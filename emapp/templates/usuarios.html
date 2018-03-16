@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<hr>
+<table border="1" cellpadding="1" cellspacing="1" style="width:500px;">
+	<thead>
+		<tr>
+			<th scope="col">Usuario</th>
+			<th scope="col">Email</th>
+			<th scope="col">&nbsp;</th>
+		</tr>
+	</thead>
+	<tbody>
+        {% for usrs in users %}
+		    <tr>
+			    <td>{{ usrs.username }}</td>
+                <td><a href="mailto:{{ usrs.email }}">{{ usrs.email }}</a></td>
+                <td><a href="{{ url_for('perfil', username=usrs.username) }}">Editar</a></td>
+		    </tr>
+        {% endfor %}
+	</tbody>
+</table>
+{% endblock %}

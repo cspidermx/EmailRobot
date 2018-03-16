@@ -8,7 +8,7 @@ from flask_login import login_required
 from flask import request
 from werkzeug.urls import url_parse
 from emapp import emrdb
-from emapp.forms import RegistrationForm
+from emapp.forms import RegistrationForm, EditProfileForm, ResetPasswordRequestForm
 
 
 @app.route('/')
@@ -54,3 +54,43 @@ def register():
         flash('Se ha registrado el usuario nuevo.')
         return redirect(url_for('index'))
     return render_template('register.html', title='Register', form=form)
+
+
+@app.route('/usuarios')
+@login_required
+def usuarios():
+    u = User.query.all()
+    return render_template('usuarios.html', title='Usuarios', users=u)
+
+
+@app.route('/perfil/<username>', methods=['GET', 'POST'])
+@login_required
+def perfil(username):
+    usr = User.query.filter_by(username=username).first_or_404()
+    frm = EditProfileForm(usr.username, usr.email)
+    frm.username.id = usr.username
+    frm.email.id = usr.email
+    if frm.validate_on_submit():
+        user = User.query.filter_by(username=frm.original_username).first()
+        user.username = frm.username.data
+        user.email = frm.email.data
+        if frm.oldpassword != "":
+            user.set_password(frm.newpassword.data)
+        emrdb.session.commit()
+        flash('Actualización completada con éxito.')
+        return redirect(url_for('usuarios'))
+    return render_template('perfil.html', user=usr, form=frm)
+
+
+@app.route('/reset_password_request', methods=['GET', 'POST'])
+def reset_password_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = ResetPasswordRequestForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            send_password_reset_email(user)
+        flash('Check your email for the instructions to reset your password')
+        return redirect(url_for('login'))
+    return render_template('reset_password_request.html', title='Restablecer Password', form=form)
