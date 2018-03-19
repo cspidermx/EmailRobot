@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Hola, {{ current_user.username }}!</h1>
+    <h1>Hola, {{ current_user.username }}!</h1><BR>
+    {% if serv.running %}
+        El servicio esta: ENCENDIDO
+    {% else %}
+        El servicio esta: APAGADO
+    {% endif %}
+
 {% endblock %}

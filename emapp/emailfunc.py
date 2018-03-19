@@ -21,7 +21,7 @@ def email_address(string):
     if len(eml) == 0:
         return None
     else:
-        return eml  # email_prog.match(eml[0])
+        return eml
 
 
 def maint(caller):
@@ -33,11 +33,11 @@ def maint(caller):
         emrdb.session.commit()
 
     if s is not None:
-        if not s.running:
+        if s.running:
             if caller == 1:
                 mainprocess(1)
             global t
-            t = Timer(10, mainprocess, [2])
+            t = Timer(300, mainprocess, [2])
             t.start()
 
 
@@ -52,9 +52,9 @@ def mainprocess(clr):
         result, data = con.fetch(idmail, '(RFC822)')
         raw = email.message_from_bytes(data[0][1])
         emldta = (email_address(raw['To']), email_address(raw['From']), raw['Subject'], raw['Date'], raw['Message-ID'])
-        t = Tk.tknzr(str(get_body(raw)))
+        tokens = Tk.tknzr(str(get_body(raw)))
         print(emldta)
-        print(t)
+        print(tokens)
     fin(con)
     if clr != 1:
         maint(2)

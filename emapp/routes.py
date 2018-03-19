@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, url_for
 from emapp import app
 from emapp.forms import LoginForm
 from flask_login import current_user, login_user
-from emapp.models import User
+from emapp.models import User, Service
 from flask_login import logout_user
 from flask_login import login_required
 from flask import request
@@ -17,7 +17,13 @@ from emapp.emailfunc import send_password_reset_email
 @login_required
 def index():
     # print("Is Alive: " + maint.is_alive())
-    return render_template('index.html', title='Inicio')
+    try:
+        s = Service.query.one()
+    except:
+        s = Service(running=0)
+        emrdb.session.add(s)
+        emrdb.session.commit()
+    return render_template('index.html', title='Inicio', serv=s)
 
 
 @app.route('/login', methods=['GET', 'POST'])
