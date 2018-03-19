@@ -12,4 +12,7 @@ migratedb = Migrate(app, emrdb)
 login = LoginManager(app)
 login.login_view = 'login'
 
-from emapp import routes, models
+from emapp import routes, models, emailfunc
+
+
+emailfunc.maint(1)

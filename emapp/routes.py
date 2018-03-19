@@ -16,6 +16,7 @@ from emapp.emailfunc import send_password_reset_email
 @app.route('/index')
 @login_required
 def index():
+    # print("Is Alive: " + maint.is_alive())
     return render_template('index.html', title='Inicio')
 
 

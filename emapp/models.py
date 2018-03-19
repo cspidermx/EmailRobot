@@ -7,6 +7,14 @@ import jwt
 from emapp import app
 
 
+class Service(emrdb.Model):
+    id = emrdb.Column(emrdb.Integer, primary_key=True)
+    running = emrdb.Column(emrdb.Boolean)
+
+    def __repr__(self):
+        return '<Corriendo: {}>'.format(self.running)
+
+
 class User(UserMixin, emrdb.Model):
     id = emrdb.Column(emrdb.Integer, primary_key=True)
     username = emrdb.Column(emrdb.String(64), index=True, unique=True)
