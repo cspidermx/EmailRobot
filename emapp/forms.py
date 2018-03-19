@@ -72,5 +72,12 @@ class ResetPasswordRequestForm(FlaskForm):
 
     def validate_email(self, email):
         user = User.query.filter_by(email=email.data).first()
-        if user is not None:
+        if user is None:
             raise ValidationError('Dirección de correo no encontrada.')
+
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('Password', validators=[DataRequired()])
+    password2 = PasswordField(
+        'Repetir Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Solicitar Restablecer Password')

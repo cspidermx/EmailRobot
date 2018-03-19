@@ -1,4 +1,6 @@
 import imaplib
+from flask import render_template
+from emapp import app
 import smtplib
 from email.message import EmailMessage
 import datetime
@@ -17,13 +19,26 @@ def fin(cnn):  # closes the folder and terminates the connection
 
 
 def send_password_reset_email(usr):
+    smtpserver = app.config['SMTPGOOGLE']
+    # smtpserver = app.config['SMTPNEMARIS']
+
     msg = EmailMessage()
     msg['Subject'] = "Restablecer Password - Robot Email"
-    msg['From'] = "me"
-    msg['To'] = "You"
-    smtp = smtplib.SMTP(cfig['server'], cfig['port'])
-    smtp.starttls()
-    # smtp = smtplib.SMTP_SSL(cfig['server'], cfig['port'])  # Use this for Nemaris Server
-    smtp.login(cfig['user'], cfig['password'])
-    smtp.sendmail('deepcri77@gmail.com', 'cbarajas@carant-games.com', message.as_string())
+    msg['From'] = smtpserver['user']
+    msg['To'] = usr.email
+    msg.set_type('text/html')
+
+    token = usr.get_reset_password_token()
+    msg.set_content(render_template('email/reset_password.txt', user=usr, token=token))
+    html_msg = render_template('email/reset_password.html', user=usr, token=token)
+    msg.add_alternative(html_msg, subtype="html")
+
+    if not smtpserver['SSL']:
+        smtp = smtplib.SMTP(smtpserver['server'], smtpserver['port'])
+        smtp.starttls()
+    else:
+        smtp = smtplib.SMTP_SSL(smtpserver['server'], smtpserver['port'])  # Use this for Nemaris Server
+    smtp.login(smtpserver['user'], smtpserver['password'])
+    smtp.sendmail(msg['From'], msg['To'], msg.as_string())
     smtp.quit()
+    print(msg)
