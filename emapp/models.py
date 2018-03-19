@@ -30,7 +30,7 @@ class User(UserMixin, emrdb.Model):
     @staticmethod
     def verify_reset_password_token(token):
         try:
-            idtkn = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])['reset_password']
+            idtkn = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])['restablecer_password']
         except:
             return
         return User.query.get(idtkn)
