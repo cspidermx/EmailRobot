@@ -9,11 +9,12 @@ from flask import request
 from werkzeug.urls import url_parse
 from emapp import emrdb
 from emapp.forms import RegistrationForm, EditProfileForm, ResetPasswordRequestForm, ResetPasswordForm
+from emapp.forms import StartService, StopService
 from emapp.emailfunc import send_password_reset_email
 
 
-@app.route('/')
-@app.route('/index')
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
     # print("Is Alive: " + maint.is_alive())
@@ -23,7 +24,15 @@ def index():
         s = Service(running=0)
         emrdb.session.add(s)
         emrdb.session.commit()
-    return render_template('index.html', title='Inicio', serv=s)
+
+    if s.running:
+        frmss = StopService()
+    else:
+        frmss = StartService()
+
+    if frmss.validate_on_submit():
+        print(frmss.submit.label)
+    return render_template('index.html', title='Inicio', serv=s, form=frmss)
 
 
 @app.route('/login', methods=['GET', 'POST'])
