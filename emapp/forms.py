@@ -4,12 +4,8 @@ from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
 from emapp.models import User
 
 
-class StartService(FlaskForm):
-    submit = SubmitField('Iniciar')
-
-
-class StopService(FlaskForm):
-    submit = SubmitField('Detener')
+class StartStop(FlaskForm):
+    submit = SubmitField('_____')
 
 
 class LoginForm(FlaskForm):

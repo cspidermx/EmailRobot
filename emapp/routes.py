@@ -9,29 +9,46 @@ from flask import request
 from werkzeug.urls import url_parse
 from emapp import emrdb
 from emapp.forms import RegistrationForm, EditProfileForm, ResetPasswordRequestForm, ResetPasswordForm
-from emapp.forms import StartService, StopService
-from emapp.emailfunc import send_password_reset_email
+from emapp.forms import StartStop
+from emapp.emailfunc import send_password_reset_email, maint
+import threading
+
+
+def readstatus():
+    try:
+        ser = Service.query.one()
+    except:
+        ser = Service(running=0)
+        emrdb.session.add(s)
+        emrdb.session.commit()
+    return ser
 
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
-    # print("Is Alive: " + maint.is_alive())
-    try:
-        s = Service.query.one()
-    except:
-        s = Service(running=0)
-        emrdb.session.add(s)
-        emrdb.session.commit()
-
+    s = readstatus()
+    frmss = StartStop()
     if s.running:
-        frmss = StopService()
+        frmss.submit.label.text = "Detener"
     else:
-        frmss = StartService()
-
+        frmss.submit.label.text = "Iniciar"
     if frmss.validate_on_submit():
-        print(frmss.submit.label)
+        s = readstatus()
+        if frmss.submit.label.text == "Detener":
+            s.running = 0
+            emrdb.session.commit()
+            a = threading.enumerate()
+            print(a)
+            print(a[1])
+            print(a[1].name)
+            frmss.submit.label.text = "Iniciar"
+        else:
+            s.running = 1
+            emrdb.session.commit()
+            frmss.submit.label.text = "Detener"
+            maint(1)
     return render_template('index.html', title='Inicio', serv=s, form=frmss)
 
 

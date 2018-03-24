@@ -4,9 +4,8 @@ from emapp import app
 import smtplib
 from email.message import EmailMessage
 from threading import Thread
-import datetime
+import time
 import re
-from threading import Timer
 from emapp import emrdb
 from emapp.models import Service
 import email
@@ -24,25 +23,41 @@ def email_address(string):
         return eml
 
 
-def maint(caller):
+def readstatus():
     try:
         s = Service.query.one()
     except:
         s = Service(running=0)
         emrdb.session.add(s)
         emrdb.session.commit()
+    return s
 
-    if s is not None:
-        if s.running:
-            if caller == 1:
-                mainprocess(1)
-            global t
-            t = Timer(300, mainprocess, [2])
-            t.start()
+
+def maint(caller):
+    ab = Thread(target=mainthread, args=(app, caller))
+    ab.setName("maint")
+    ab.start()
+
+
+def mainthread(app, caller):
+    # with app.app_context():
+        s = readstatus()
+        if s is not None:
+            if s.running:
+                if caller == 1:
+                    mainprocess(1)
+                # for i in range(1, 10):
+                i = 1
+                while s.running and i <= 10:
+                    print("entro al for")
+                    time.sleep(30)
+                    i = i+1
+                    s = readstatus()
+                if s.running:
+                    mainprocess(2)
 
 
 def mainprocess(clr):
-    print("avance")
     imapserver = app.config['IMAPGOOGLE']
     # imapserver = app.config['IMAPNEMARIS']
     con = auth(imapserver)
@@ -55,6 +70,9 @@ def mainprocess(clr):
         tokens = Tk.tknzr(str(get_body(raw)))
         print(emldta)
         print(tokens)
+        s = readstatus()
+        if not s.running:
+            return True
     fin(con)
     if clr != 1:
         maint(2)
