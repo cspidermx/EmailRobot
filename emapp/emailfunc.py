@@ -3,7 +3,6 @@ from flask import render_template
 from emapp import app
 import smtplib
 from email.message import EmailMessage
-# from threading import Thread
 import threading
 import time
 import re
@@ -25,8 +24,6 @@ def email_address(string):
 
 
 class StoppableThread(threading.Thread):
-    """Thread class with a stop() method. The thread itself has to check
-    regularly for the stopped() condition."""
 
     def __init__(self, *args, **kwargs):
         super(StoppableThread, self).__init__(*args, **kwargs)
@@ -53,11 +50,12 @@ def maint(caller):
     global ab
     ab = StoppableThread(target=mainthread, args=(app, caller))
     ab.setName("maint")
+    ab.daemon = True
     ab.start()
 
 
 def mainthread(app, caller):
-    # with app.app_context():
+    with app.app_context():
         s = readstatus()
         if s is not None:
             if s.running:
@@ -85,8 +83,8 @@ def mainprocess(clr):
         tokens = Tk.tknzr(str(get_body(raw)))
         print(emldta)
         print(tokens)
-        s = readstatus()
-        if not s.running:
+        if ab.stopped():
+            fin(con)
             return True
     fin(con)
     if clr != 1:
