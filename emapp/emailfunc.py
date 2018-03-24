@@ -3,7 +3,8 @@ from flask import render_template
 from emapp import app
 import smtplib
 from email.message import EmailMessage
-from threading import Thread
+# from threading import Thread
+import threading
 import time
 import re
 from emapp import emrdb
@@ -23,6 +24,21 @@ def email_address(string):
         return eml
 
 
+class StoppableThread(threading.Thread):
+    """Thread class with a stop() method. The thread itself has to check
+    regularly for the stopped() condition."""
+
+    def __init__(self, *args, **kwargs):
+        super(StoppableThread, self).__init__(*args, **kwargs)
+        self._stop_event = threading.Event()
+
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
+
+
 def readstatus():
     try:
         s = Service.query.one()
@@ -34,7 +50,8 @@ def readstatus():
 
 
 def maint(caller):
-    ab = Thread(target=mainthread, args=(app, caller))
+    global ab
+    ab = StoppableThread(target=mainthread, args=(app, caller))
     ab.setName("maint")
     ab.start()
 
@@ -48,12 +65,10 @@ def mainthread(app, caller):
                     mainprocess(1)
                 # for i in range(1, 10):
                 i = 1
-                while s.running and i <= 10:
-                    print("entro al for")
+                while not ab.stopped() and i <= 10:
                     time.sleep(30)
                     i = i+1
-                    s = readstatus()
-                if s.running:
+                if not ab.stopped():
                     mainprocess(2)
 
 

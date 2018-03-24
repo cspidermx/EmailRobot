@@ -32,17 +32,30 @@ def index():
     frmss = StartStop()
     if s.running:
         frmss.submit.label.text = "Detener"
+        livethreads = threading.enumerate()
+        mnthr = None
+        for lvth in livethreads:
+            if lvth.name == "maint":
+                mnthr = lvth
+                break
+        if mnthr is None:
+            maint(1)
     else:
         frmss.submit.label.text = "Iniciar"
+
     if frmss.validate_on_submit():
         s = readstatus()
         if frmss.submit.label.text == "Detener":
             s.running = 0
             emrdb.session.commit()
-            a = threading.enumerate()
-            print(a)
-            print(a[1])
-            print(a[1].name)
+            livethreads = threading.enumerate()
+            mnthr = None
+            for lvth in livethreads:
+                if lvth.name == "maint":
+                    mnthr = lvth
+                    break
+            if mnthr is not None:
+                mnthr.stop
             frmss.submit.label.text = "Iniciar"
         else:
             s.running = 1
