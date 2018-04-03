@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block navbar %}
-    <nav class="navbar navbar-default">
+    <nav class="navbar navbar-default ">
         <div class="container">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
@@ -23,14 +23,15 @@
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">
                     <li><a href="{{ url_for('index') }}">Inicio</a></li>
+                    <li><a href="{{ url_for('config', token='main') }}">Configuración</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     {% if current_user.is_anonymous %}
-                    <li><a href="{{ url_for('login') }}">Login</a></li>
+                        <li><a href="{{ url_for('login') }}">Login</a></li>
                     {% else %}
-		    <li><a href="{{ url_for('usuarios') }}">Usuarios</a></li>
-                    <li><a href="{{ url_for('register') }}">Agregar Usuario</a></li>
-                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+		                <li><a href="{{ url_for('usuarios') }}">Usuarios</a></li>
+                        <li><a href="{{ url_for('register') }}">Agregar Usuario</a></li>
+                        <li><a href="{{ url_for('logout') }}">Logout</a></li>
                     {% endif %}
                 </ul>
             </div>

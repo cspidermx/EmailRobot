@@ -71,8 +71,7 @@ def mainthread(app, caller):
 
 
 def mainprocess(clr):
-    imapserver = app.config['IMAPGOOGLE']
-    # imapserver = app.config['IMAPNEMARIS']
+    imapserver = app.config['IMAP']
     con = auth(imapserver)
     r, d = con.select('INBOX')
     for i in range(int(b'1'), int(d[0]) + 1):
@@ -122,12 +121,11 @@ def send_async_email(app, srv, msge):
 
 
 def send_email(server, msg):
-    Thread(target=send_async_email, args=(app, server, msg)).start()
+    threading.Thread(target=send_async_email, args=(app, server, msg)).start()
 
 
 def send_password_reset_email(usr):
-    smtpserver = app.config['SMTPGOOGLE']
-    # smtpserver = app.config['SMTPNEMARIS']
+    smtpserver = app.config['SMTP']
 
     msg = EmailMessage()
     msg['Subject'] = "Restablecer Password - Robot Email"

@@ -9,6 +9,7 @@ from flask import request
 from werkzeug.urls import url_parse
 from emapp import emrdb
 from emapp.forms import RegistrationForm, EditProfileForm, ResetPasswordRequestForm, ResetPasswordForm
+from emapp.forms import EditOutAccForm, EditInAccForm, EditDBAccForm
 from emapp.forms import StartStop
 from emapp.emailfunc import send_password_reset_email, maint
 import threading
@@ -19,7 +20,7 @@ def readstatus():
         ser = Service.query.one()
     except:
         ser = Service(running=0)
-        emrdb.session.add(s)
+        emrdb.session.add(ser)
         emrdb.session.commit()
     return ser
 
@@ -157,3 +158,65 @@ def reset_password(token):
         flash('Your password has been reset.')
         return redirect(url_for('login'))
     return render_template('reset_password.html', form=form)
+
+
+@app.route('/config/<token>', methods=['GET', 'POST'])
+@login_required
+def config(token):
+    if token == 'IN':
+        imapsrv = app.config['IMAP']
+        frm = EditInAccForm()
+        if request.method == 'GET':
+            frm.username.data = imapsrv['user']
+            frm.servidor.data = imapsrv['server']
+            frm.puerto.data = imapsrv['port']
+    else:
+        if token == 'OUT':
+            smtpsrv = app.config['SMTP']
+            frm = EditOutAccForm()
+            if request.method == 'GET':
+                frm.username.data = smtpsrv['user']
+                frm.servidor.data = smtpsrv['server']
+                frm.puerto.data = smtpsrv['port']
+                frm.ssl.data = smtpsrv['SSL']
+        else:
+            if token == 'DB':
+                dbsrv = app.config['DBCRED']
+                frm = EditDBAccForm()
+                if request.method == 'GET':
+                    frm.username.data = dbsrv['dbuser']
+                    frm.servidor.data = dbsrv['dburl']
+            else:
+                frm = None
+    if frm is not None:
+        if frm.validate_on_submit():
+            if token == 'IN':
+                if frm.password.data != '':
+                    pwd = frm.password.data
+                else:
+                    pwd = app.config['IMAP']['password']
+                app.config['IMAP'] = {'user': frm.username.data,
+                                        'password': pwd,
+                                        'server': frm.servidor.data,
+                                        'port': frm.puerto.data}
+            else:
+                if token == 'OUT':
+                    if frm.password.data != '':
+                        pwd = frm.password.data
+                    else:
+                        pwd = app.config['SMTP']['password']
+                    app.config['SMTP'] = {'user': frm.username.data,
+                                            'password': pwd,
+                                            'server': frm.servidor.data,
+                                            'port': frm.puerto.data,
+                                            'SSL': frm.ssl.data}
+                else:
+                    if token == 'OUT':
+                        if frm.password.data != '':
+                            pwd = frm.password.data
+                        else:
+                            pwd = app.config['DBCRED']['dbpass']
+                        app.config['DBCRED'] = {'dburl': frm.servidor.data,
+                                                'dbuser': frm.username.data,
+                                                'dbpass': pwd}
+    return render_template('config.html', form=frm)

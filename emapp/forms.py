@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
+from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, NumberRange
 from emapp.models import User
 
 
@@ -39,7 +39,7 @@ class EditProfileForm(FlaskForm):
     oldpassword = PasswordField('Password Anterior')
     newpassword = PasswordField('Password Nuevo')
     newpassword2 = PasswordField('Repetir Password Nuevo', validators=[EqualTo('newpassword')])
-    submit = SubmitField('Submit')
+    submit = SubmitField('Enviar')
 
     def __init__(self, original_username, original_email, *args, **kwargs):
         super(EditProfileForm, self).__init__(*args, **kwargs)
@@ -85,3 +85,27 @@ class ResetPasswordForm(FlaskForm):
     password2 = PasswordField(
         'Repetir Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Solicitar Restablecer Password')
+
+
+class EditOutAccForm(FlaskForm):
+    username = StringField('Usuario', validators=[DataRequired()])
+    password = PasswordField('Password')
+    servidor = StringField('Servidor', validators=[DataRequired()])
+    puerto = StringField('Puerto', validators=[DataRequired(), NumberRange()])
+    ssl = BooleanField('SSL')
+    submit = SubmitField('Guardar')
+
+
+class EditInAccForm(FlaskForm):
+    username = StringField('Usuario', validators=[DataRequired()])
+    password = PasswordField('Password')
+    servidor = StringField('Servidor', validators=[DataRequired()])
+    puerto = StringField('Puerto', validators=[DataRequired(), NumberRange()])
+    submit = SubmitField('Guardar')
+
+
+class EditDBAccForm(FlaskForm):
+    servidor = StringField('URL', validators=[DataRequired()])
+    username = StringField('Usuario', validators=[DataRequired()])
+    password = PasswordField('Password')
+    submit = SubmitField('Guardar')
