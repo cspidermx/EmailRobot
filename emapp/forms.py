@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, DecimalField, SelectField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, NumberRange
 from emapp.models import User
 
@@ -91,7 +91,7 @@ class EditOutAccForm(FlaskForm):
     username = StringField('Usuario', validators=[DataRequired()])
     password = PasswordField('Password')
     servidor = StringField('Servidor', validators=[DataRequired()])
-    puerto = StringField('Puerto', validators=[DataRequired(), NumberRange()])
+    puerto = DecimalField('Puerto', validators=[DataRequired(), NumberRange()], places=0)
     ssl = BooleanField('SSL')
     submit = SubmitField('Guardar')
 
@@ -100,11 +100,15 @@ class EditInAccForm(FlaskForm):
     username = StringField('Usuario', validators=[DataRequired()])
     password = PasswordField('Password')
     servidor = StringField('Servidor', validators=[DataRequired()])
-    puerto = StringField('Puerto', validators=[DataRequired(), NumberRange()])
+    puerto = DecimalField('Puerto', validators=[DataRequired(), NumberRange()], places=0)
     submit = SubmitField('Guardar')
 
 
 class EditDBAccForm(FlaskForm):
+    driver = SelectField('Base de Datos', choices=[('postgresql://', 'Postgres'),
+                                                     ('mysql://', 'MySQL'),
+                                                     ('oracle://', 'Oracle'),
+                                                     ('sqlite:///', 'SQLite')])
     servidor = StringField('URL', validators=[DataRequired()])
     username = StringField('Usuario', validators=[DataRequired()])
     password = PasswordField('Password')

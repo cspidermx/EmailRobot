@@ -10,6 +10,8 @@ from emapp import emrdb
 from emapp.models import Service
 import email
 import emapp.tokenizer as Tk
+import os
+from bs4 import BeautifulSoup
 
 
 def email_address(string):
@@ -74,14 +76,30 @@ def mainprocess(clr):
     imapserver = app.config['IMAP']
     con = auth(imapserver)
     r, d = con.select('INBOX')
-    for i in range(int(b'1'), int(d[0]) + 1):
+    # for i in range(int(b'1'), int(d[0]) + 1):
+    for i in range(int(b'1'), int(981) + 1):
         idmail = str(i).encode('ascii')
         result, data = con.fetch(idmail, '(RFC822)')
         raw = email.message_from_bytes(data[0][1])
-        emldta = (email_address(raw['To']), email_address(raw['From']), raw['Subject'], raw['Date'], raw['Message-ID'])
-        tokens = Tk.tknzr(str(get_body(raw)))
-        print(emldta)
-        print(tokens)
+        soup = BeautifulSoup(get_body(raw), 'html.parser')
+        whereat = raw['From'].find("@", 0) + 1
+        wheredot = raw['From'].find(".", whereat)
+        cliente = raw['From'][whereat:wheredot]
+        emldta = (email_address(raw['To']), email_address(raw['From']), raw['Subject'], raw['Date'], cliente, raw['Message-ID'])
+        tokens = Tk.tknzr(soup.get_text())
+        file_path = os.path.join('C:\\Users\\Charly\\Desktop\\SapMails', cliente, str(idmail) + ".txt")
+        if not os.path.exists(os.path.join('C:\\Users\\Charly\\Desktop\\SapMails', cliente)):
+            os.makedirs(os.path.join('C:\\Users\\Charly\\Desktop\\SapMails', cliente))
+        with open(file_path, 'wb') as f:
+            f.write(str(emldta).encode('utf-8') + b'\r\n' + b'\r\n')
+            f.write(str(tokens).encode('utf-8'))
+            # f.write(soup.get_text().encode('utf-8'))
+        file_path = os.path.join('C:\\Users\\Charly\\Desktop\\SapMails', cliente, str(idmail) + ".html")
+        with open(file_path, 'wb') as f:
+            f.write(get_body(raw))
+        print(str(i) + " - " + cliente)
+        # print(emldta)
+        # print(tokens)
         if ab.stopped():
             fin(con)
             return True
@@ -92,7 +110,7 @@ def mainprocess(clr):
 
 def get_body(msg):  # extracts the body from the email
     if msg.is_multipart():
-        return get_body(msg.get_payload(0))
+        return get_body(msg.get_payload(1))
     else:
         return msg.get_payload(None, True)
 

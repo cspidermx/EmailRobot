@@ -56,7 +56,7 @@ def index():
                     mnthr = lvth
                     break
             if mnthr is not None:
-                mnthr.stop
+                mnthr.stop()
             frmss.submit.label.text = "Iniciar"
         else:
             s.running = 1
@@ -184,6 +184,7 @@ def config(token):
                 dbsrv = app.config['DBCRED']
                 frm = EditDBAccForm()
                 if request.method == 'GET':
+                    frm.driver.data = dbsrv['dbdriver']
                     frm.username.data = dbsrv['dbuser']
                     frm.servidor.data = dbsrv['dburl']
             else:
@@ -211,12 +212,13 @@ def config(token):
                                             'port': frm.puerto.data,
                                             'SSL': frm.ssl.data}
                 else:
-                    if token == 'OUT':
+                    if token == 'DB':
                         if frm.password.data != '':
                             pwd = frm.password.data
                         else:
                             pwd = app.config['DBCRED']['dbpass']
-                        app.config['DBCRED'] = {'dburl': frm.servidor.data,
+                        app.config['DBCRED'] = {'dbdriver': frm.driver.data,
+                                                'dburl': frm.servidor.data,
                                                 'dbuser': frm.username.data,
                                                 'dbpass': pwd}
     return render_template('config.html', form=frm)
