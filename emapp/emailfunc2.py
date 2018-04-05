@@ -77,7 +77,7 @@ def mainprocess(clr):
     con = auth(imapserver)
     r, d = con.select('INBOX')
     # for i in range(int(b'1'), int(d[0]) + 1):
-    for i in range(int(b'1'), int(b'500') + 1):
+    for i in range(int(b'1475'), int(b'1483') + 1):
         idmail = str(i).encode('ascii')
         result, data = con.fetch(idmail, '(RFC822)')
         raw = email.message_from_bytes(data[0][1])
@@ -86,27 +86,18 @@ def mainprocess(clr):
         wheredot = raw['From'].find(".", whereat)
         cliente = raw['From'][whereat:wheredot]
         if cliente != 'sap':
-            emldta = (email_address(raw['To']), email_address(raw['From']), raw['Subject'].replace('***SPAM***', '').strip(), raw['Date'], cliente, raw['Message-ID'])
+            emldta = (email_address(raw['To']), email_address(raw['From']), raw['Subject'], raw['Date'], cliente, raw['Message-ID'])
             tokens = Tk.tknzr(soup.get_text())
-            file_path = os.path.join('C:\\Users\\Carlos\\Desktop\\SapMails', "emails.txt")
-            if not os.path.isfile(file_path):
-                mode = 'wb'
-            else:
-                mode = 'ab'
-            with open(file_path, mode) as f:
-                if mode == 'wb': f.write('To|From|Subject|Date|Cliente|MsgID'.encode('utf-8') + b'\r\n')
-                f.write('|'.join(map(str, emldta)).encode('utf-8') + b'\r\n')
-            file_path = os.path.join('C:\\Users\\Carlos\\Desktop\\SapMails', "data.txt")
-            if not os.path.isfile(file_path):
-                mode = 'wb'
-            else:
-                mode = 'ab'
-            with open(file_path, mode) as f:
-                if mode == 'wb': f.write('Alert Details|Start Date Time|End Date Time|Managed Object|Category|Rating|Status|Description|Analysis Tools'.encode('utf-8') + b'\r\n')
-                f.write('|'.join(map(str, tokens)).encode('utf-8') + b'\r\n')
-        # file_path = os.path.join('C:\\Users\\Charly\\Desktop\\SapMails', cliente, str(idmail) + ".html")
-        # with open(file_path, 'wb') as f:
-        #     f.write(get_body(raw))
+            file_path = os.path.join('C:\\Users\\Carlos\\Desktop\\SapMails', cliente, str(idmail) + ".txt")
+            if not os.path.exists(os.path.join('C:\\Users\\Carlos\\Desktop\\SapMails', cliente)):
+                os.makedirs(os.path.join('C:\\Users\\Carlos\\Desktop\\SapMails', cliente))
+            with open(file_path, 'wb') as f:
+                f.write(str(emldta).encode('utf-8') + b'\r\n' + b'\r\n')
+                f.write(str(tokens).encode('utf-8'))
+                # f.write(soup.get_text().encode('utf-8'))
+            file_path = os.path.join('C:\\Users\\Carlos\\Desktop\\SapMails', cliente, str(idmail) + ".html")
+            with open(file_path, 'wb') as f:
+                f.write(get_body(raw))
         print(str(i) + " - " + cliente)
         # print(emldta)
         # print(tokens)
