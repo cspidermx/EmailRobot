@@ -13,6 +13,42 @@ def __apnd (txt, frst, scnd, epty, start):
     return val, idx2
 
 
+def __score(txt, what, ind):
+    idx = txt.find(what, ind)
+    if idx != -1:
+        return 1, idx
+    else:
+        return 0, 0
+
+
+def tkformat(texto):
+    score = 0
+    s, idx = __score(texto, "Alert Details", 0)
+    score += s
+    s, idx = __score(texto, "Start Date Time", idx)
+    score += s
+    s, idx = __score(texto, "End Date Time", idx)
+    score += s
+    s, idx = __score(texto, "Managed Object", idx)
+    score += s
+    s, idx = __score(texto, "Category", idx)
+    score += s
+    s, idx = __score(texto, "Rating", idx)
+    score += s
+    s, idx = __score(texto, "Status", idx)
+    score += s
+    s, idx = __score(texto, "Measured Metrics", idx)
+    score += s
+    s, idx = __score(texto, "Alert Description", idx)
+    score += s
+    s, idx = __score(texto, "Analysis Tools:", idx)
+    score += s
+    if score >= 5:
+        return 1
+    else:
+        return 2
+
+
 def tknzr (texto):
     tk = []
     try:

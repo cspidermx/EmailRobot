@@ -12,6 +12,8 @@ import email
 import emapp.tokenizer as Tk
 import os
 from bs4 import BeautifulSoup
+from dateutil import parser
+from dateutil.tz import gettz
 
 
 def email_address(string):
@@ -76,8 +78,11 @@ def mainprocess(clr):
     imapserver = app.config['IMAP']
     con = auth(imapserver)
     r, d = con.select('INBOX')
+    if r != 'OK':
+        return True
+    tzinfos = {"CST": gettz("America/Mexico_City")}
     # for i in range(int(b'1'), int(d[0]) + 1):
-    for i in range(int(b'1'), int(b'500') + 1):
+    for i in range(int(b'1'), int(d[0]) + 1):
         idmail = str(i).encode('ascii')
         result, data = con.fetch(idmail, '(RFC822)')
         raw = email.message_from_bytes(data[0][1])
@@ -85,29 +90,48 @@ def mainprocess(clr):
         whereat = raw['From'].find("@", 0) + 1
         wheredot = raw['From'].find(".", whereat)
         cliente = raw['From'][whereat:wheredot]
-        if cliente != 'sap':
-            emldta = (email_address(raw['To']), email_address(raw['From']), raw['Subject'].replace('***SPAM***', '').strip(), raw['Date'], cliente, raw['Message-ID'])
+        frmt = Tk.tkformat(soup.get_text())
+        if frmt == 1:
+            emldta = (email_address(raw['To']),
+                        email_address(raw['From']),
+                        raw['Subject'].replace('***SPAM***', '').strip(),
+                        parser.parse(raw['Date'].replace("CST_NA", "CST"), tzinfos=tzinfos).strftime('%d-%m-%Y %H:%M:%S'),
+                        cliente,
+                        raw['Message-ID'])
+            # .strftime('{%Y-%m-%d %H:%M:%S}')
+            # dt = parser.parse(raw['Date'].replace("CST_NA", "CST"))
+            # print(dt.strftime('%d-%m-%Y %H:%M:%S'))
             tokens = Tk.tknzr(soup.get_text())
-            file_path = os.path.join('C:\\Users\\Carlos\\Desktop\\SapMails', "emails.txt")
+            try:
+                tokens[1] = parser.parse(tokens[1].replace("CST_NA", "CST"), tzinfos=tzinfos).strftime('%d-%m-%Y %H:%M:%S')
+            except:
+                None
+            try:
+                tokens[2] = parser.parse(tokens[2].replace("CST_NA", "CST"), tzinfos=tzinfos).strftime('%d-%m-%Y %H:%M:%S')
+            except:
+                None
+            file_path = os.path.join('C:\\Users\\Charly\\Desktop\\SapMails', "emails.txt")
             if not os.path.isfile(file_path):
                 mode = 'wb'
             else:
                 mode = 'ab'
             with open(file_path, mode) as f:
-                if mode == 'wb': f.write('To|From|Subject|Date|Cliente|MsgID'.encode('utf-8') + b'\r\n')
-                f.write('|'.join(map(str, emldta)).encode('utf-8') + b'\r\n')
-            file_path = os.path.join('C:\\Users\\Carlos\\Desktop\\SapMails', "data.txt")
+                if mode == 'wb':
+                    f.write('ID|To|From|Subject|Date|Cliente|MsgID'.encode('utf-8') + b'\r\n')
+                f.write((str(i) + '|').encode('utf-8') + '|'.join(map(str, emldta)).encode('utf-8') + b'\r\n')
+            file_path = os.path.join('C:\\Users\\Charly\\Desktop\\SapMails', "data.txt")
             if not os.path.isfile(file_path):
                 mode = 'wb'
             else:
                 mode = 'ab'
             with open(file_path, mode) as f:
-                if mode == 'wb': f.write('Alert Details|Start Date Time|End Date Time|Managed Object|Category|Rating|Status|Description|Analysis Tools'.encode('utf-8') + b'\r\n')
-                f.write('|'.join(map(str, tokens)).encode('utf-8') + b'\r\n')
+                if mode == 'wb':
+                    f.write('ID|Alert Details|Start Date Time|End Date Time|Managed Object|Category|Rating|Status|Description|Analysis Tools'.encode('utf-8') + b'\r\n')
+                f.write((str(i) + '|').encode('utf-8') + '|'.join(map(str, tokens)).encode('utf-8') + b'\r\n')
         # file_path = os.path.join('C:\\Users\\Charly\\Desktop\\SapMails', cliente, str(idmail) + ".html")
         # with open(file_path, 'wb') as f:
         #     f.write(get_body(raw))
-        print(str(i) + " - " + cliente)
+        print(str(i) + "/" + str(int(d[0])) + " - " + cliente + " - ")
         # print(emldta)
         # print(tokens)
         if ab.stopped():
