@@ -9,8 +9,8 @@ import re
 from emapp import emrdb
 from emapp.models import Service
 import email
-import emapp.tokenizer as Tk
-import os
+from emapp.tokenizer import tknzr, tkformat
+from emapp.storage import storedata
 from bs4 import BeautifulSoup
 from dateutil import parser
 from dateutil.tz import gettz
@@ -74,66 +74,68 @@ def mainthread(app, caller):
                     mainprocess(2)
 
 
+def store_email(emailid, conn, folder):
+    folder = folder.upper()
+    try:
+        r, d = conn.select(folder)
+        if r == 'NO':
+            r, d = conn.create(folder)
+        r, d = conn.select('INBOX')
+    except AttributeError:
+        print(r, " - ", d)
+    conn.store(emailid, '-FLAGS', '\\Seen')
+    conn.store(emailid, '+X-GM-LABELS', folder)
+    conn.store(emailid, '+FLAGS', '\\Deleted')  # Borra el de INBOX
+    # mov, data = conn.uid('STORE', emailid, '+FLAGS', '(\Deleted)')  # Mantiene las 2 copias
+    conn.expunge()
+
+
 def mainprocess(clr):
     imapserver = app.config['IMAP']
     con = auth(imapserver)
     r, d = con.select('INBOX')
     if r != 'OK':
+        con.logout()
         return True
     tzinfos = {"CST": gettz("America/Mexico_City")}
     # for i in range(int(b'1'), int(d[0]) + 1):
-    for i in range(int(b'1'), int(d[0]) + 1):
-        idmail = str(i).encode('ascii')
+    # for i in range(int(b'1'), int(d[0]) + 1):
+    i = 0
+    while int(d[0]) >= 1:
+        # idmail = str(i).encode('ascii')
+        idmail = str(1).encode('ascii')
         result, data = con.fetch(idmail, '(RFC822)')
-        raw = email.message_from_bytes(data[0][1])
-        soup = BeautifulSoup(get_body(raw), 'html.parser')
-        whereat = raw['From'].find("@", 0) + 1
-        wheredot = raw['From'].find(".", whereat)
-        cliente = raw['From'][whereat:wheredot]
-        frmt = Tk.tkformat(soup.get_text())
-        if frmt == 1:
-            emldta = (email_address(raw['To']),
-                        email_address(raw['From']),
-                        raw['Subject'].replace('***SPAM***', '').strip(),
-                        parser.parse(raw['Date'].replace("CST_NA", "CST"), tzinfos=tzinfos).strftime('%d-%m-%Y %H:%M:%S'),
-                        cliente,
-                        raw['Message-ID'])
-            # .strftime('{%Y-%m-%d %H:%M:%S}')
-            # dt = parser.parse(raw['Date'].replace("CST_NA", "CST"))
-            # print(dt.strftime('%d-%m-%Y %H:%M:%S'))
-            tokens = Tk.tknzr(soup.get_text())
-            try:
-                tokens[1] = parser.parse(tokens[1].replace("CST_NA", "CST"), tzinfos=tzinfos).strftime('%d-%m-%Y %H:%M:%S')
-            except:
-                None
-            try:
-                tokens[2] = parser.parse(tokens[2].replace("CST_NA", "CST"), tzinfos=tzinfos).strftime('%d-%m-%Y %H:%M:%S')
-            except:
-                None
-            file_path = os.path.join('C:\\Users\\Charly\\Desktop\\SapMails', "emails.txt")
-            if not os.path.isfile(file_path):
-                mode = 'wb'
-            else:
-                mode = 'ab'
-            with open(file_path, mode) as f:
-                if mode == 'wb':
-                    f.write('ID|To|From|Subject|Date|Cliente|MsgID'.encode('utf-8') + b'\r\n')
-                f.write((str(i) + '|').encode('utf-8') + '|'.join(map(str, emldta)).encode('utf-8') + b'\r\n')
-            file_path = os.path.join('C:\\Users\\Charly\\Desktop\\SapMails', "data.txt")
-            if not os.path.isfile(file_path):
-                mode = 'wb'
-            else:
-                mode = 'ab'
-            with open(file_path, mode) as f:
-                if mode == 'wb':
-                    f.write('ID|Alert Details|Start Date Time|End Date Time|Managed Object|Category|Rating|Status|Description|Analysis Tools'.encode('utf-8') + b'\r\n')
-                f.write((str(i) + '|').encode('utf-8') + '|'.join(map(str, tokens)).encode('utf-8') + b'\r\n')
-        # file_path = os.path.join('C:\\Users\\Charly\\Desktop\\SapMails', cliente, str(idmail) + ".html")
-        # with open(file_path, 'wb') as f:
-        #     f.write(get_body(raw))
-        print(str(i) + "/" + str(int(d[0])) + " - " + cliente + " - ")
-        # print(emldta)
-        # print(tokens)
+        if result == 'OK':
+            raw = email.message_from_bytes(data[0][1])
+            soup = BeautifulSoup(get_body(raw), 'html.parser')
+            whereat = raw['From'].find("@", 0) + 1
+            wheredot = raw['From'].find(".", whereat)
+            cliente = raw['From'][whereat:wheredot]
+            frmt = tkformat(soup.get_text())
+            if frmt == 1:
+                i += 1
+                emldta = (email_address(raw['To']),
+                            email_address(raw['From']),
+                            raw['Subject'].replace('***SPAM***', '').strip(),
+                            parser.parse(raw['Date'].replace("CST_NA", "CST"), tzinfos=tzinfos).strftime('%d-%m-%Y %H:%M:%S'),
+                            cliente,
+                            raw['Message-ID'])
+                tokens = tknzr(soup.get_text())
+                try:
+                    tokens[1] = parser.parse(tokens[1].replace("CST_NA", "CST"), tzinfos=tzinfos).strftime('%d-%m-%Y %H:%M:%S')
+                except:
+                    None
+                try:
+                    tokens[2] = parser.parse(tokens[2].replace("CST_NA", "CST"), tzinfos=tzinfos).strftime('%d-%m-%Y %H:%M:%S')
+                except:
+                    None
+                storedata(emldta, tokens, i)
+            store_email(idmail, con, cliente)
+            r, d = con.select('INBOX')
+        else:
+            fin(con)
+            return True
+        print(str(i) + "/" + str(int(d[0]) + 1) + " - " + cliente + " - ")
         if ab.stopped():
             fin(con)
             return True
