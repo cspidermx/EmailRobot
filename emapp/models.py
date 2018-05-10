@@ -7,6 +7,37 @@ import jwt
 from emapp import app
 
 
+class Email(emrdb.Model):
+    id = emrdb.Column(emrdb.Integer, primary_key=True)
+    asunto = emrdb.Column(emrdb.String())
+    fecha = emrdb.Column(emrdb.DateTime())
+    cliente = emrdb.Column(emrdb.String())
+    idmsg = emrdb.Column(emrdb.String())
+
+
+class EmailFrom(emrdb.Model):
+    id = emrdb.Column(emrdb.Integer, primary_key=True)
+    frm = emrdb.Column('from', emrdb.String())
+
+
+class EmailTo(emrdb.Model):
+    id = emrdb.Column(emrdb.Integer, primary_key=True)
+    to = emrdb.Column(emrdb.String())
+
+
+class Alerta(emrdb.Model):
+    id = emrdb.Column(emrdb.Integer, primary_key=True)
+    alert_details = emrdb.Column(emrdb.String())
+    start_datetime = emrdb.Column(emrdb.DateTime())
+    end_datetime = emrdb.Column(emrdb.DateTime())
+    managed_object = emrdb.Column(emrdb.String())
+    category = emrdb.Column(emrdb.String())
+    rating = emrdb.Column(emrdb.String())
+    status = emrdb.Column(emrdb.String())
+    description = emrdb.Column(emrdb.String())
+    analysis_tools = emrdb.Column(emrdb.String())
+
+
 class Service(emrdb.Model):
     id = emrdb.Column(emrdb.Integer, primary_key=True)
     running = emrdb.Column(emrdb.Boolean)

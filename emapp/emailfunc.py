@@ -129,7 +129,7 @@ def mainprocess(clr):
                     tokens[2] = parser.parse(tokens[2].replace("CST_NA", "CST"), tzinfos=tzinfos).strftime('%d-%m-%Y %H:%M:%S')
                 except:
                     None
-                storedata(emldta, tokens, i)
+                storedata(emldta, tokens)
             store_email(idmail, con, cliente)
             r, d = con.select('INBOX')
         else:
