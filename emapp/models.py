@@ -17,12 +17,12 @@ class Email(emrdb.Model):
 
 class EmailFrom(emrdb.Model):
     id = emrdb.Column(emrdb.Integer, primary_key=True)
-    frm = emrdb.Column('from', emrdb.String())
+    frm = emrdb.Column('from', emrdb.String(), primary_key=True, nullable=True)
 
 
 class EmailTo(emrdb.Model):
     id = emrdb.Column(emrdb.Integer, primary_key=True)
-    to = emrdb.Column(emrdb.String())
+    to = emrdb.Column(emrdb.String(), primary_key=True, nullable=True)
 
 
 class Alerta(emrdb.Model):
