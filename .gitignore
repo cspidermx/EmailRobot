@@ -97,5 +97,6 @@ ENV/
 
 # mypy
 .mypy_cache/
+.idea/
 config.py
-.idea/workspace.xml
+
